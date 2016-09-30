@@ -5,9 +5,6 @@
     "adminUserName": {
       "value": "azureuser"
     },
-    "adminPassword": {
-      "value": "GEN-PASSWORD"
-    },
     "vmSize": {
       "value": "Standard_D2"
     },
