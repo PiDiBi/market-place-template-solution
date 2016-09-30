@@ -29,7 +29,7 @@
         "toolTip": "VM name in resource group after deployment",
         "constraints": {
           "required": true,
-          "regex": "^[a-z0-9]{8,24}$",
+          "regex": "^[a-z0-9]{6,15}$",
           "validationMessage": "VM names must be between 8 and 24 characters long, and can contain only numbers and lowercase letters."
         }
       }
