@@ -1,0 +1,58 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUserName": {
+      "value": "azureuser"
+    },
+    "adminPassword": {
+      "value": "SOME-STRONG-PASSWORD"
+    },
+    "vmSize": {
+      "value": "Standard_D2"
+    },
+    "storageAccountNewOrExisting": {
+      "value": "new"
+    },
+    "storageAccountName": {
+      "value": "gordicampst1"
+    },
+    "storageAccountType": {
+      "value": "Standard_LRS"
+    },
+    "sourceImageURI": {
+      "value": "https://[publicblob]].blob.core.windows.net/vhds/iurad-osDisk-template04.vhd"
+    },
+    "sourceStorageAccountResourceGroup": {
+      "value": "gordicsource"
+    },
+    "customImageName": {
+      "value": "iurad-osDisk-template04.vhd"
+    },
+    "transferVmName": {
+      "value": "TransferVM"
+    },
+    "newVmName": {
+      "value": "iuradgordic01"
+    },
+    "vnetNewOrExisting": {
+      "value": "new"
+    },
+    "vnetName": {
+      "value": "my-vnet"
+    },
+    "vnetPrefix": {
+      "value": "10.1.0.0/16"
+    },
+    "vnetSubnet1Name": {
+      "value": "subnet-1"
+    },
+    "vnetSubnet1Prefix": {
+      "value": "10.1.0.0/24"
+    }
+    ,
+    "location": {
+      "value": "northeurope"
+    }
+  }
+}
