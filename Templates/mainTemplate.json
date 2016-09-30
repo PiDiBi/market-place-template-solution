@@ -92,14 +92,7 @@
       "metadata": {
         "description": "Name of the new VM deployed from the custom image."
       }
-    },
-
-    "customImageName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the VHD to be used as source syspreped/generalized image to deploy the VM. E.g. mybaseimage.vhd."
-      }
-    },
+    },    
     "adminUserName": {
       "type": "string",
       "minLength": 1,
@@ -112,23 +105,11 @@
       "minLength": 8,
       "metadata": {
         "description": "Local administrator password, complex password is required, do not use any variation of the password word because it will be rejected."
-      }
-    },
-    "sourceImageURI": {
-      "type": "string",
-      "metadata": {
-        "description": "Full URIs for one or more custom images (VHDs) that should be copied to the deployment storage account to spin up new VMs from them. URLs must be comma separated."
-      }
-    },
-    "sourceStorageAccountResourceGroup": {
-      "type": "string",
-      "metadata": {
-        "description": "Resource group name of the source storage account."
-      }
-    }
+      }        
+    }    
   },
   "variables": {
-    "sourceStorageAccountName": "[substring(split(parameters('sourceImageURI'),'.')[0],8)]",
+    "sourceStorageAccountName": "[substring(split(variables('sourceImageURI'),'.')[0],8)]",
     "vmCount": 2,
     "vmNames": [
       "[parameters('transferVmName')]",
@@ -157,7 +138,10 @@
     "scriptFileName": "run.ps1",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', parameters('vnetSubnet1Name'))]",
-    "dnsPrefix":"[concat(parameters('newVmName'),uniquestring(resourceGroup().id, deployment().name))]"
+    "dnsPrefix":"[concat(parameters('newVmName'),uniquestring(resourceGroup().id, deployment().name))]",
+    "sourceImageURI": "https://[somepublicblob].blob.core.windows.net/vhds/iurad-osDisk-template04.vhd",    
+    "customImageName": "iurad-osDisk-template04.vhd"
+    
   },
   
   "resources": [
@@ -328,7 +312,7 @@
               ]
             },
             "protectedSettings"  : {
-              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ','ImageTransfer.ps1 -SourceImage ', parameters('sourceImageURI'),' -DestinationURI https://', parameters('storageAccountName'), '.blob.core.windows.net/vhds', ' -DestinationSAKey ', listKeys(concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), '2015-06-15').key1)]"
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ','ImageTransfer.ps1 -SourceImage ', variables('sourceImageURI'),' -DestinationURI https://', parameters('storageAccountName'), '.blob.core.windows.net/vhds', ' -DestinationSAKey ', listKeys(concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), '2015-06-15').key1)]"
             }                        
             
           }
@@ -365,7 +349,7 @@
             "createOption": "FromImage",
             "caching": "ReadWrite",
             "image": {
-              "uri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net/',variables('vhdStorageAccountContainerName'),'/',parameters('customImageName'))]"
+              "uri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net/',variables('vhdStorageAccountContainerName'),'/',variables('customImageName'))]"
             },
             "vhd": {
               "uri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net/',variables('vhdStorageAccountContainerName'),'/',variables('VMNames')[1],'-osdisk.vhd')]"

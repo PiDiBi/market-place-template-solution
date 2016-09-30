@@ -4,7 +4,7 @@
 
 Param(
     [string] $ResourceGroupLocation = 'northeurope',
-    [string] $ResourceGroupName = 'gordicamprg008',
+    [string] $ResourceGroupName = 'gordicamprg009',
     [string] $StorageAccountName = 'gordicamp',
     [string] $StorageContainerName = 'public', #gordicamp/public/* -- no need to use SAS, resource group: gordisource
     [string] $TemplateFile = '..\_publish\Templates\mainTemplate.json',

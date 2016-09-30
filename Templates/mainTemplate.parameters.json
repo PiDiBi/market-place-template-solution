@@ -6,7 +6,7 @@
       "value": "azureuser"
     },
     "adminPassword": {
-      "value": "SOME-STRONG-PASSWORD"
+      "value": "GEN-PASSWORD"
     },
     "vmSize": {
       "value": "Standard_D2"
@@ -19,16 +19,7 @@
     },
     "storageAccountType": {
       "value": "Standard_LRS"
-    },
-    "sourceImageURI": {
-      "value": "https://[publicblob]].blob.core.windows.net/vhds/iurad-osDisk-template04.vhd"
-    },
-    "sourceStorageAccountResourceGroup": {
-      "value": "gordicsource"
-    },
-    "customImageName": {
-      "value": "iurad-osDisk-template04.vhd"
-    },
+    },    
     "transferVmName": {
       "value": "TransferVM"
     },
