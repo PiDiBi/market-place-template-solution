@@ -13,7 +13,11 @@ This tempalte solution is ready for Azure Market Place (AMP)
 4. createUiDefinition.json - UI definition for AMP
 5. vnet-[new|existing].json - subtemplate for vnet creation 
 6. storageAccount-[new|existing].json - not used - was problem with prevalidating of custom etension - tried to use non created storage, if creating started in subtemplate
+7. test.html - contains test link for testing createUiDefinition.json
 
 All is validated against: https://github.com/Azure/azure-marketplace/wiki/Requirements-and-Recommendations-for-Marketplace-Solution-Templates (private repo at this time, sorry)
 
 
+## todo
+* new/existing storage
+* delete TransferVM after deployment
