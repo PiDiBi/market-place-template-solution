@@ -1,0 +1,142 @@
+﻿{
+  "handler": "Microsoft.Compute.MultiVm",
+  "version": "0.0.1-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "adminUsername",
+        "type": "Microsoft.Compute.UserNameTextBox",
+        "label": "Username",
+        "toolTip": "Admin username for the virtual machines.",
+        "osPlatform": "Windows"
+      },
+      {
+        "name": "adminPassword",
+        "type": "Microsoft.Compute.CredentialsCombo",
+        "label": {
+          "password": "Password",
+          "confirmPassword": "Confirm password"
+        },
+        "toolTip": {
+          "password": "Admin password for the virtual machines."
+        },
+        "osPlatform": "Windows"
+      },
+      {
+        "name": "vmName",
+        "type": "Microsoft.Common.TextBox",
+        "label": "VM name",
+        "toolTip": "VM name in resource group after deployment",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z0-9]{8,24}$",
+          "validationMessage": "VM names must be between 8 and 24 characters long, and can contain only numbers and lowercase letters."
+        }
+      }
+    ],
+    "steps": [      
+      {
+        "name": "infrastructureConfig",
+        "label": "Infrastructure settings",
+        "subLabel": {
+          "preValidation": "Configure the infrastructure settings",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Infrastructure settings",
+        "elements": [
+          {
+            "name": "vnet",
+            "type": "Microsoft.Network.VirtualNetworkCombo",
+            "label": {
+              "virtualNetwork": "Virtual Network",
+              "subnets": "Subnets"
+            },
+            "defaultValue": {
+              "name": "my-vnet",
+              "addressPrefixSize": "/16"
+            },
+            "constraints": {
+              "minAddressPrefixSize": "/16"
+            },
+            "subnets": {
+              "subnet1": {
+                "label": "Subnet",
+                "defaultValue": {
+                  "name": "subnet-1",
+                  "addressPrefixSize": "/24"
+                },
+                "constraints": {
+                  "minAddressPrefixSize": "/24"
+                }
+              }       
+            }
+          },
+          {
+            "name": "storageAccount",
+            "type": "Microsoft.Storage.StorageAccountSelector",
+            "label": "Storage account",
+            "toolTip": "Storage account where the VM disks will be stored.",
+            "defaultValue": {
+              "type": "Standard_LRS"
+            },
+            "constraints": {
+              "required": true,
+              "excludedTypes": [
+                "Premium_LRS"
+              ]
+            }
+          },
+          {
+            "name": "vmSize",
+            "type": "Microsoft.Compute.SizeSelector",
+            "label": "Virtual machine size",
+            "toolTip": "The size of the virtual machine for the domain controller.",
+            "recommendedSizes": [
+              "Standard_D2",
+              "Standard_D3",
+              "Standard_D4"
+            ],
+            "constraints": {
+              "allowedSizes": [
+                "Standard_D1",
+                "Standard_D2",
+                "Standard_D3",
+                "Standard_D4",
+                "Standard_D11",
+                "Standard_D12",
+                "Standard_D13",
+                "Standard_D14"
+              ]
+            },
+            "osPlatform": "Windows",
+            "imageReference": {
+              "publisher": "MicrosoftWindowsServer",
+              "offer": "WindowsServer",
+              "sku": "2012-R2-Datacenter"
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "location": "[location()]",
+      "adminUsername": "[basics('adminUsername')]",
+      "adminPassword": "[basics('adminPassword')]",
+      "newVmName": "[basics('vmName')]",
+
+      "vnetNewOrExisting": "[steps('infrastructureConfig').vnet.newOrExisting]",
+      "vnetName": "[steps('infrastructureConfig').vnet.name]",
+      "vnetPrefix": "[steps('infrastructureConfig').vnet.addressPrefix]",
+      "vnetSubnet1Name": "[steps('infrastructureConfig').vnet.subnets.subnet1.name]",
+      "vnetSubnet1Prefix": "[steps('infrastructureConfig').vnet.subnets.subnet1.addressPrefix]",
+      "storageAccountNewOrExisting": "[steps('infrastructureConfig').storageAccount.newOrExisting]",
+      "storageAccountName": "[steps('infrastructureConfig').storageAccount.name]",
+      "storageAccountType": "[steps('infrastructureConfig').storageAccount.type]",
+
+      "existingStorageAccountRG": "[steps('infrastructureConfig').storageAccount.resourceGroup]",
+
+      "vmSize": "[steps('infrastructureConfig').vmSize]"
+
+    }
+  }
+}

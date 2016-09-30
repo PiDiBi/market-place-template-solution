@@ -1,0 +1,422 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "templateBaseUrl": { 
+      "type": "string",
+      "metadata": {
+        "description": "Base URL for Marketplace", 
+        "artifactsBaseUrl": "" 
+      },
+      "defaultValue": "https://gordicamp.blob.core.windows.net/public" 
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "The location where the solution will be deployed."
+      }
+    },
+    "transferVmName": {
+      "type": "string",
+      "defaultValue": "TransferVM",
+      "minLength": 3,
+      "maxLength": 15,
+      "metadata": {
+        "description": "Name of the Windows VM that will perform the copy of the VHD from a source storage account to the new storage account created in the new deployment, this is known as transfer vm."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "VM size of new virtual machine that will be deployed from a custom image."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of storage account"
+      }
+    },
+    "storageAccountNewOrExisting": {
+      "type": "string",
+      "defaultValue": "new",
+      "allowedValues": [
+        "new",
+        "existing"
+      ],
+      "metadata": {
+        "Description": "Indicates whether the Storage Account is new or existing"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "metadata": {
+        "description": "The type of the Storage Account created"
+      },
+      "defaultValue": "Standard_LRS"
+    },
+    "existingStorageAccountRG": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource Group of the Existing VM."
+      },
+      "defaultValue": ""
+    },
+    "vnetNewOrExisting": {
+      "type": "string",
+      "allowedValues": [
+        "new",
+        "existing"
+      ]
+    },
+    "vnetName": {
+      "type": "string"
+    },
+    "vnetPrefix": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "vnetSubnet1Name": {
+      "type": "string"
+    },
+    "vnetSubnet1Prefix": {
+      "type": "string"
+    },
+
+    "newVmName": {
+      "type": "string",
+      "defaultValue": "NewVM",
+      "minLength": 3,
+      "maxLength": 15,
+      "metadata": {
+        "description": "Name of the new VM deployed from the custom image."
+      }
+    },
+
+    "customImageName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the VHD to be used as source syspreped/generalized image to deploy the VM. E.g. mybaseimage.vhd."
+      }
+    },
+    "adminUserName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Name of the local administrator account, this cannot be Admin, Administrator or root."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "minLength": 8,
+      "metadata": {
+        "description": "Local administrator password, complex password is required, do not use any variation of the password word because it will be rejected."
+      }
+    },
+    "sourceImageURI": {
+      "type": "string",
+      "metadata": {
+        "description": "Full URIs for one or more custom images (VHDs) that should be copied to the deployment storage account to spin up new VMs from them. URLs must be comma separated."
+      }
+    },
+    "sourceStorageAccountResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource group name of the source storage account."
+      }
+    }
+  },
+  "variables": {
+    "sourceStorageAccountName": "[substring(split(parameters('sourceImageURI'),'.')[0],8)]",
+    "vmCount": 2,
+    "vmNames": [
+      "[parameters('transferVmName')]",
+      "[parameters('newVmName')]"
+    ],
+    "nicNames": [
+      "[concat(parameters('transferVmName'),'Nic')]",
+      "[concat(parameters('newVmName'),'Nic')]"
+    ],
+    "projectName": "201-vm-customimage-new-storageaccount",
+    "publicIpNames": [
+      "[concat(parameters('transferVmName'),'PublicIP')]",
+      "[concat(parameters('newVmName'),'PublicIP')]"
+    ],
+    "windowsOSVersion": "2012-R2-Datacenter",
+    "imagePublisher": "MicrosoftWindowsServer",
+    "imageOffer": "WindowsServer",
+    "osDiskName": "OSDisk",
+    "transferVmSize": "Standard_D1",
+    "vhdStorageAccountContainerName": "vhds",
+    "trfCustomScriptFile": "ImageTransfer.ps1",
+    "scriptFolder": ".",
+    "TemplatesFolder": ".",
+    "vnetSetupURL":           "[concat(parameters('templateBaseUrl'), '/', variables('TemplatesFolder'), '/', concat('vnet-'          ,parameters('vnetNewOrExisting')          ,'.json'))]",
+    "storageAccountSetupURL": "[concat(parameters('templateBaseUrl'), '/', variables('TemplatesFolder'), '/', concat('storageAccount-',parameters('storageAccountNewOrExisting'),'.json'))]",
+    "scriptFileName": "run.ps1",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', parameters('vnetSubnet1Name'))]",
+    "dnsPrefix":"[concat(parameters('newVmName'),uniquestring(resourceGroup().id, deployment().name))]"
+  },
+  
+  "resources": [
+      {
+      "comments": "# Storage Account",
+      "name": "[parameters('storageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[parameters('location')]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "StorageAccount"
+      },
+      "properties": {
+        "accountType": "[parameters('storageAccountType')]"        
+      }
+    },
+    
+    {
+      "apiVersion": "2015-01-01",
+      "name": "vnet-template",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('vnetSetupURL')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "vnetPrefix": {
+            "value": "[parameters('vnetPrefix')]"
+          },
+          "vnetSubnet1Name": {
+            "value": "[parameters('vnetSubnet1Name')]"
+          },
+          "vnetSubnet1Prefix": {
+            "value": "[parameters('vnetSubnet1Prefix')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "# Public IP",
+      "name": "[variables('publicIpNames')[copyIndex()]]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[parameters('location')]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [],
+      "copy": {
+        "count": "[variables('vmCount')]",
+        "name": "pipCopy"
+      },
+      "tags": {
+        "displayName": "[concat(variables('publicIpNames')[copyIndex()],' Public IP')]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[concat(variables('dNSPrefix'), copyIndex())]"
+        }
+      }
+    },
+    {
+      "comments": "# NICs",
+      "name": "[variables('nicNames')[copyIndex()]]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[parameters('location')]",
+      "apiVersion": "2015-06-15",
+      "copy": {
+        "count": "[variables('vmCount')]",
+        "name": "nicCopy"
+      },
+      "dependsOn": [
+        "Microsoft.Resources/deployments/vnet-template",
+        "pipCopy"
+      ],
+      "tags": {
+        "displayName": "[concat(variables('VMNames')[copyIndex()], ' Network Interface')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIpNames')[copyIndex()])]"
+              },
+              "subnet": {
+                "id": "[variables('subnet1Ref')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "comments": "# TRANSFER VM",
+      "name": "[variables('vmNames')[0]]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[parameters('location')]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [        
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('vmNames')[0],'NIC')]"
+      ],
+      "tags": {
+        "displayName": "[variables('vmNames')[0]]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('transferVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmNames')[0]]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('windowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(variables('vmNames')[0],'-osdisk')]",
+            "vhd": {
+              "uri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net/', variables('vhdStorageAccountContainerName'), '/',variables('vmNames')[0],'-osdisk' , '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicNames')[0]))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "comments": "Custom Script that copies VHDs from source storage account to destination storage account",
+          "apiVersion": "2015-06-15",
+          "type": "extensions",
+          "name": "[concat(variables('VMNames')[0],'CustomScriptExtension')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+            "[concat('Microsoft.Compute/virtualMachines/', variables('vmNames')[0])]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "autoUpgradeMinorVersion": true,
+            "typeHandlerVersion": "1.4",
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('templateBaseUrl'), '/', variables('ScriptFolder'), '/', variables('trfCustomScriptFile'))]"
+              ]
+            },
+            "protectedSettings"  : {
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ','ImageTransfer.ps1 -SourceImage ', parameters('sourceImageURI'),' -DestinationURI https://', parameters('storageAccountName'), '.blob.core.windows.net/vhds', ' -DestinationSAKey ', listKeys(concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), '2015-06-15').key1)]"
+            }                        
+            
+          }
+        }
+      ]
+    },
+    {
+      "comments": "# New Windows VM based on custom image",
+      "name": "[variables('vmNames')[1]]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[parameters('location')]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('vmNames')[1],'NIC')]",
+        "[concat('Microsoft.Compute/virtualMachines/', variables('VMNames')[0],'/extensions/',variables('VMNames')[0],'CustomScriptExtension')]"
+      ],
+      "tags": {
+        "displayName": "[variables('VMNames')[1]]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('VMNames')[1]]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "name": "[concat(variables('vmNames')[1],'-osdisk')]",
+            "osType": "windows",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "image": {
+              "uri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net/',variables('vhdStorageAccountContainerName'),'/',parameters('customImageName'))]"
+            },
+            "vhd": {
+              "uri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net/',variables('vhdStorageAccountContainerName'),'/',variables('VMNames')[1],'-osdisk.vhd')]"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicNames')[1]))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "name": "CustomScriptExtension",
+          "apiVersion": "2015-06-15",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[variables('VMNames')[1]]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.8",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('templateBaseUrl'), '/', variables('ScriptFolder'), '/', variables('ScriptFileName'))]"
+              ],
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('ScriptFolder'), '/', variables('ScriptFileName'))]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "storageAccountInfo": {
+      "value": "[reference(concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName')))]",
+      "type" : "object"
+    },
+    "customScriptTransferVM": {
+      "value": "[concat(variables('VMNames')[0],'CustomScriptExtension')]",
+      "type" : "object"
+    },
+    "customScriptVM": {
+      "value": "[concat(variables('VMNames')[1],'CustomScriptExtension')]",
+      "type" : "object"
+    }
+  }
+}
