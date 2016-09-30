@@ -7,8 +7,8 @@ Param(
     [string] $ResourceGroupName = 'gordicamprg008',
     [string] $StorageAccountName = 'gordicamp',
     [string] $StorageContainerName = 'public', #gordicamp/public/* -- no need to use SAS, resource group: gordisource
-    [string] $TemplateFile = '..\_publish\mainTemplate.json',
-    [string] $TemplateParametersFile = '..\_publish\mainTemplate.parameters.json',
+    [string] $TemplateFile = '..\_publish\Templates\mainTemplate.json',
+    [string] $TemplateParametersFile = '..\_publish\Templates\mainTemplate.parameters.json',
     [string] $ArtifactStagingDirectory = '..\_publish'
 )
 
@@ -25,8 +25,8 @@ $TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScrip
 $TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
 
 # copy to staging directory
-Copy-Item -Path '..\Templates\' -Filter *.json -Destination $ArtifactStagingDirectory –Recurse
-Copy-Item -Path '..\Scripts\' -Filter *.ps1 -Destination $ArtifactStagingDirectory –Recurse
+Copy-Item -Path '..\Templates\' -Filter *.json -Destination $ArtifactStagingDirectory –Recurse -Force
+Copy-Item -Path '..\Scripts\' -Filter *.ps1 -Destination $ArtifactStagingDirectory –Recurse -Force
 
 # Convert relative paths to absolute paths if needed
 $ArtifactStagingDirectory = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $ArtifactStagingDirectory))
