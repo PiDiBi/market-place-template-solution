@@ -2,7 +2,7 @@
 Create VM for transfer image from other storage and create VM from this image.
 This template solution is ready for Azure Market Place (AMP)
 * create temp TransferVM and with customscript extension transfer image of OS to local storage
-* create VM from this transfered image and runs post isntall powershell script using customscript extension 
+* create VM from this transfered image and runs post-install powershell script using customscript extension 
 
 ## files
 1. Deploy-AzureResourceGroup.ps1 - edit parmeters inside or pass them - for testing deployment
@@ -21,3 +21,4 @@ All is validated against: https://github.com/Azure/azure-marketplace/wiki/Requir
 ## todo
 * new/existing storage
 * delete TransferVM after deployment
+* push to staging via AMP publish portal to validate all
