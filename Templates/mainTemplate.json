@@ -2,13 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "templateBaseUrl": { 
+    "baseUrl": { 
       "type": "string",
       "metadata": {
         "description": "Base URL for Marketplace", 
         "artifactsBaseUrl": "" 
       },
-      "defaultValue": "https://gordicamp.blob.core.windows.net/public" 
+      "defaultValue": "https://raw.githubusercontent.com/PiDiBi/market-place-template-solution/master/Templates/" 
     },
     "location": {
       "type": "string",
@@ -133,15 +133,14 @@
     "trfCustomScriptFile": "ImageTransfer.ps1",
     "scriptFolder": ".",
     "TemplatesFolder": ".",
-    "vnetSetupURL":           "[concat(parameters('templateBaseUrl'), '/', variables('TemplatesFolder'), '/', concat('vnet-'          ,parameters('vnetNewOrExisting')          ,'.json'))]",
-    "storageAccountSetupURL": "[concat(parameters('templateBaseUrl'), '/', variables('TemplatesFolder'), '/', concat('storageAccount-',parameters('storageAccountNewOrExisting'),'.json'))]",
+    "vnetSetupURL":           "[concat(parameters('baseUrl'), '/', variables('TemplatesFolder'), '/', concat('vnet-'          ,parameters('vnetNewOrExisting')          ,'.json'))]",
+    "storageAccountSetupURL": "[concat(parameters('baseUrl'), '/', variables('TemplatesFolder'), '/', concat('storageAccount-',parameters('storageAccountNewOrExisting'),'.json'))]",
     "scriptFileName": "run.ps1",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', parameters('vnetSubnet1Name'))]",
     "dnsPrefix":"[concat(parameters('newVmName'),uniquestring(resourceGroup().id, deployment().name))]",
-    "sourceImageURI": "https://[somepublicblob].blob.core.windows.net/vhds/iurad-osDisk-template04.vhd",    
-    "customImageName": "iurad-osDisk-template04.vhd"
-    
+    "sourceImageURI": "https://iuradstorage.blob.core.windows.net/system/Microsoft.Compute/Images/mytemplates/template04-osDisk.cf42df41-e6b4-4dbb-bf2c-db1663c38b86.vhd",    
+    "customImageName": "template04-osDisk.cf42df41-e6b4-4dbb-bf2c-db1663c38b86.vhd"
   },
   
   "resources": [
@@ -308,7 +307,7 @@
             "typeHandlerVersion": "1.4",
             "settings": {
               "fileUris": [
-                "[concat(parameters('templateBaseUrl'), '/', variables('ScriptFolder'), '/', variables('trfCustomScriptFile'))]"
+                "[concat(parameters('baseUrl'), '/', variables('ScriptFolder'), '/', variables('trfCustomScriptFile'))]"
               ]
             },
             "protectedSettings"  : {
@@ -380,7 +379,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "fileUris": [
-                "[concat(parameters('templateBaseUrl'), '/', variables('ScriptFolder'), '/', variables('ScriptFileName'))]"
+                "[concat(parameters('baseUrl'), '/', variables('ScriptFolder'), '/', variables('ScriptFileName'))]"
               ],
               "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('ScriptFolder'), '/', variables('ScriptFileName'))]"
             }
