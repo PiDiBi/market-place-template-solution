@@ -140,7 +140,7 @@
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', parameters('vnetSubnet1Name'))]",
     "dnsPrefix":"[concat(parameters('newVmName'),uniquestring(resourceGroup().id, deployment().name))]",
     "sourceImageURI": "https://iuradstorage.blob.core.windows.net/system/Microsoft.Compute/Images/mytemplates/template04-osDisk.cf42df41-e6b4-4dbb-bf2c-db1663c38b86.vhd",    
-    "customImageName": "template04-osDisk.cf42df41-e6b4-4dbb-bf2c-db1663c38b86.vhd"
+    "customImageName": "Microsoft.Compute/Images/mytemplates/template04-osDisk.cf42df41-e6b4-4dbb-bf2c-db1663c38b86.vhd"
   },
   
   "resources": [
@@ -391,14 +391,6 @@
   "outputs": {
     "storageAccountInfo": {
       "value": "[reference(concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName')))]",
-      "type" : "object"
-    },
-    "customScriptTransferVM": {
-      "value": "[concat(variables('VMNames')[0],'CustomScriptExtension')]",
-      "type" : "object"
-    },
-    "customScriptVM": {
-      "value": "[concat(variables('VMNames')[1],'CustomScriptExtension')]",
       "type" : "object"
     }
   }
